@@ -1,3 +1,10 @@
 from django.db import models
 
-# Create your models here.
+class Cliente(models.Model):
+    nome = models.CharField(max_length=255)
+    email = models.EmailField(unique=True) # Permitindo somente emails unicos
+    telefone = models.CharField(max_length=20)
+
+class Vendedor(models.Model):
+    nome = models.CharField(max_length=255)
+    email = models.EmailField(unique=True)
