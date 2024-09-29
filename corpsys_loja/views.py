@@ -17,7 +17,6 @@ class ProdutoViewSet(viewsets.ModelViewSet):
 class GrupoProdutoViewSet(viewsets.ModelViewSet):
     queryset = GrupoProduto.objects.all()
     serializer_class = GrupoProdutoSerializer
-
 class VendaViewSet(viewsets.ModelViewSet):
     queryset = Venda.objects.all()
     serializer_class = VendaSerializer
