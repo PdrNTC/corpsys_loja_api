@@ -1,5 +1,5 @@
-from corpsys_loja.models import Cliente, Vendedor, Produto, GrupoProduto, Venda, ItemVenda
-from corpsys_loja.serializers import ClienteSerializer, VendedorSerializer, ProdutoSerializer, GrupoProdutoSerializer, VendaSerializer, ItemVendaSerializer
+from corpsys_loja.models import Cliente, Vendedor, Produto, GrupoProduto, Venda
+from corpsys_loja.serializers import ClienteSerializer, VendedorSerializer, ProdutoSerializer, GrupoProdutoSerializer, VendaSerializer
 from rest_framework import viewsets
 
 class ClienteViewSet(viewsets.ModelViewSet):
@@ -21,7 +21,3 @@ class GrupoProdutoViewSet(viewsets.ModelViewSet):
 class VendaViewSet(viewsets.ModelViewSet):
     queryset = Venda.objects.all()
     serializer_class = VendaSerializer
-
-class ItemVendaViewSet(viewsets.ModelViewSet):
-    queryset = ItemVenda.objects.all()
-    serializer_class = ItemVendaSerializer
