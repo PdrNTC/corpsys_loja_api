@@ -33,42 +33,42 @@ class ItemVendaSerializer(serializers.ModelSerializer):
         return obj.produto.preco  # Retorna o preço do produto
 
 class VendaSerializer(serializers.ModelSerializer):
-    cliente = serializers.StringRelatedField(read_only=True)
-    vendedor = serializers.StringRelatedField(read_only=True)
-    itens = ItemVendaSerializer(many=True, read_only=True)  # Somente leitura
+    vendedor = serializers.StringRelatedField()  # Mostrar o nome do vendedor #
+    cliente = serializers.StringRelatedField()  
+    itens = ItemVendaSerializer(many=True, read_only=True) 
 
-    # Campos para escrita
-    cliente_id = serializers.PrimaryKeyRelatedField(queryset=Cliente.objects.all(), write_only=True)
-    vendedor_id = serializers.PrimaryKeyRelatedField(queryset=Vendedor.objects.all(), write_only=True)
-    itens_data = serializers.ListField(child=serializers.DictField(), write_only=True)  # Usado para criar os itens
+    # Campos para escrita (mas ocultos na interface de navegação HTML) #
+    vendedor_id = serializers.PrimaryKeyRelatedField(queryset=Vendedor.objects.all(), write_only=True, label='Vendedor')
+    cliente_id = serializers.PrimaryKeyRelatedField(queryset=Cliente.objects.all(), write_only=True, label='Cliente')
+    itens_data = serializers.ListField(child=serializers.DictField(), write_only=True, label='Itens')
 
-    # Formatação do campo `data_venda`
+    # Formatação do campo data #
     data_venda = serializers.DateTimeField(format="%d/%m/%Y %H:%M", read_only=True)
+
     class Meta:
         model = Venda
         fields = [
-            'id', 'cliente', 'vendedor', 'data_venda', 'itens',
-            'cliente_id', 'vendedor_id', 'itens_data'
+            'id', 'vendedor', 'cliente', 'data_venda', 'itens', 'vendedor_id', 'cliente_id', 'itens_data'
         ]
-        read_only_fields = ['data_venda']  # A data de venda é preenchida automaticamente
+        read_only_fields = ['data_venda']  # A data de venda é preenchida automaticamente #
 
     def create(self, validated_data):
         cliente = validated_data.pop('cliente_id')
         vendedor = validated_data.pop('vendedor_id')
         itens_data = validated_data.pop('itens_data')
 
-        # Criação da venda
+        # Criação da venda #
         venda = Venda.objects.create(cliente=cliente, vendedor=vendedor)
 
-        # Criação dos itens da venda
+        # Criação dos itens da venda #
         for item_data in itens_data:
-            produto_id = item_data['produto']  # Pegando apenas o ID do produto
+            produto_id = item_data['produto']
             produto = Produto.objects.get(id=produto_id)
             ItemVenda.objects.create(
                 venda=venda,
                 produto=produto,
                 quantidade=item_data['quantidade'],
-                preco_unitario=produto.preco  # Define o preço unitário do produto
+                preco_unitario=produto.preco
             )
         return venda
 
@@ -79,14 +79,14 @@ class VendaSerializer(serializers.ModelSerializer):
 
         itens_data = validated_data.get('itens_data')
         if itens_data:
-            instance.itens.all().delete()  # Exclui todos os itens antigos
+            instance.itens.all().delete()
             for item_data in itens_data:
-                produto_id = item_data['produto']  # Pegando apenas o ID do produto
+                produto_id = item_data['produto']
                 produto = Produto.objects.get(id=produto_id)
                 ItemVenda.objects.create(
                     venda=instance,
                     produto=produto,
                     quantidade=item_data['quantidade'],
-                    preco_unitario=produto.preco  # Define o preço unitário do produto
+                    preco_unitario=produto.preco
                 )
         return instance
