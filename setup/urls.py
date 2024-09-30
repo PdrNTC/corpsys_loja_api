@@ -4,7 +4,7 @@ from django.urls import path, include
 from rest_framework import routers
 from corpsys_loja.views import ClienteViewSet, VendedorViewSet, ProdutoViewSet, GrupoProdutoViewSet, VendaViewSet
 
-# Criando obj router #
+# Criando obj router do app #
 router = routers.DefaultRouter()
 router.register(r'clientes', ClienteViewSet)
 router.register(r'vendedores', VendedorViewSet)
