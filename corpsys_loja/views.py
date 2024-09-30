@@ -9,6 +9,7 @@ from django.utils.dateparse import parse_date
 import pandas as pd
 from reportlab.pdfgen import canvas
 from io import BytesIO
+from datetime import datetime
 class ClienteViewSet(viewsets.ModelViewSet):
     queryset = Cliente.objects.all()
     serializer_class = ClienteSerializer
@@ -30,39 +31,47 @@ class VendaViewSet(viewsets.ModelViewSet):
 
 @api_view(['GET'])
 def vendas_efetuadas(request):
-    # Filtros
+    # Filtros para o usuário #
     data_inicial = request.GET.get('data_inicial')
     data_final = request.GET.get('data_final')
     vendedor_id = request.GET.get('vendedor_id')
     cliente_id = request.GET.get('cliente_id')
     exportar = request.GET.get('exportar')  # 'pdf' ou 'excel'
 
-    # Filtrar as vendas conforme os parâmetros fornecidos
+    # Filtrar as vendas conforme os parâmetros fornecidos #
     vendas = Venda.objects.all()
 
+    ## Tratando a data para ser igual com o datetime no banco ##
     if data_inicial:
-        data_inicial = parse_date(data_inicial) # Utilizando o parse_data para ignorar o datetime #
-        if data_inicial:
-            vendas = vendas.filter(data_venda__date__gte=data_inicial)
+        try:
+            data_inicial = datetime.strptime(data_inicial, "%Y-%m-%d")
+            vendas = vendas.filter(data_venda__gte=data_inicial)
+        except ValueError:
+            return Response({"error": "Formato de data inicial inválido."}, status=status.HTTP_400_BAD_REQUEST)
+
     if data_final:
-        data_final = parse_date(data_final) # Utilizando o parse_data para ignorar o datetime #
-        if data_final:
-            vendas = vendas.filter(data_venda__date__lte=data_final)
+        try:
+            # Adicionando hora, minuto e segundo ao final do dia para garantir que a data final seja incluída no filtro
+            data_final = datetime.strptime(data_final, "%Y-%m-%d").replace(hour=23, minute=59, second=59)
+            vendas = vendas.filter(data_venda__lte=data_final)
+        except ValueError:
+            return Response({"error": "Formato de data final inválido."}, status=status.HTTP_400_BAD_REQUEST)
+
     if vendedor_id:
         vendas = vendas.filter(vendedor_id=vendedor_id)
     if cliente_id:
         vendas = vendas.filter(cliente_id=cliente_id)
 
-    # Serializar os dados
+    # Serializar os dados #
     serializer = VendaSerializer(vendas, many=True)
 
-    # Exportar para PDF ou Excel
+    # Seleções para Exportar para PDF ou Excel #
     if exportar == 'pdf':
         return gerar_pdf(vendas)
     elif exportar == 'excel':
         return gerar_excel(vendas)
 
-    # Retornar os dados filtrados em JSON
+    # Retornar os dados filtrados em JSON #
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 def gerar_pdf(vendas):
