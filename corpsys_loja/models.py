@@ -35,6 +35,13 @@ class Venda(models.Model):
     data_venda = models.DateTimeField(default=timezone.now)  # Data atual no momento do cadastro
     valor_total_venda = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
 
+    ## Recalculando o valor total venda sempre que novos itens forem adiconados ##
+    def atualizar_valor_total(self):
+        # Recalcular o valor total da venda
+        valor_total = self.itens.aggregate(total=models.Sum(models.F('quantidade') * models.F('preco_unitario'), output_field=models.DecimalField()))['total'] or Decimal('0.00')
+        self.valor_total_venda = valor_total
+        self.save()
+
     def __str__(self):
         return f"Venda {self.id} - {self.vendedor.nome} para {self.cliente.nome} em {self.data_venda}"
 
@@ -43,6 +50,11 @@ class ItemVenda(models.Model):
     produto = models.ForeignKey(Produto, on_delete=models.CASCADE)
     quantidade = models.PositiveIntegerField(default=1)
     preco_unitario = models.DecimalField(max_digits=10, decimal_places=2)  # Valor será atribuído ao criar o item
+
+    def save(self, *args, **kwargs):
+        # Sobrescrever o método save para atualizar o valor total da venda ao salvar um item #
+        super().save(*args, **kwargs)
+        self.venda.atualizar_valor_total()
 
     def __str__(self):
         return f"Item {self.produto.nome_produto} - (Venda {self.venda.id})"
