@@ -33,9 +33,10 @@ class ItemVendaSerializer(serializers.ModelSerializer):
         return obj.produto.preco  # Retorna o preço do produto
 
 class VendaSerializer(serializers.ModelSerializer):
-    vendedor = serializers.StringRelatedField()  # Mostrar o nome do vendedor #
-    cliente = serializers.StringRelatedField()  
-    itens = ItemVendaSerializer(many=True, read_only=True) 
+    vendedor = serializers.StringRelatedField() # Mostrar o nome do vendedor #
+    cliente = serializers.StringRelatedField()
+    itens = ItemVendaSerializer(many=True, read_only=True)
+    valor_total_venda = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
 
     # Campos para escrita (mas ocultos na interface de navegação HTML) #
     vendedor_id = serializers.PrimaryKeyRelatedField(queryset=Vendedor.objects.all(), write_only=True, label='Vendedor')
@@ -48,9 +49,9 @@ class VendaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Venda
         fields = [
-            'id', 'vendedor', 'cliente', 'data_venda', 'itens', 'vendedor_id', 'cliente_id', 'itens_data'
+            'id', 'vendedor', 'cliente', 'data_venda', 'itens', 'vendedor_id', 'cliente_id', 'itens_data', 'valor_total_venda'
         ]
-        read_only_fields = ['data_venda']  # A data de venda é preenchida automaticamente #
+        read_only_fields = ['data_venda', 'valor_total_venda']  # A data de venda é preenchida automaticamente #
 
     def create(self, validated_data):
         cliente = validated_data.pop('cliente_id')
@@ -60,16 +61,26 @@ class VendaSerializer(serializers.ModelSerializer):
         # Criação da venda #
         venda = Venda.objects.create(cliente=cliente, vendedor=vendedor)
 
-        # Criação dos itens da venda #
+        # Criação dos itens da venda e cálculo do valor total #
+        valor_total = 0
         for item_data in itens_data:
             produto_id = item_data['produto']
             produto = Produto.objects.get(id=produto_id)
+            quantidade = item_data['quantidade']
+            preco_unitario = produto.preco
+
             ItemVenda.objects.create(
                 venda=venda,
                 produto=produto,
-                quantidade=item_data['quantidade'],
-                preco_unitario=produto.preco
+                quantidade=quantidade,
+                preco_unitario=preco_unitario
             )
+            valor_total += preco_unitario * quantidade
+
+        # Atualizando o valor total da venda
+        venda.valor_total_venda = valor_total
+        venda.save()
+
         return venda
 
     def update(self, instance, validated_data):
@@ -80,13 +91,23 @@ class VendaSerializer(serializers.ModelSerializer):
         itens_data = validated_data.get('itens_data')
         if itens_data:
             instance.itens.all().delete()
+            valor_total = 0
             for item_data in itens_data:
                 produto_id = item_data['produto']
                 produto = Produto.objects.get(id=produto_id)
+                quantidade = item_data['quantidade']
+                preco_unitario = produto.preco
+
                 ItemVenda.objects.create(
                     venda=instance,
                     produto=produto,
-                    quantidade=item_data['quantidade'],
-                    preco_unitario=produto.preco
+                    quantidade=quantidade,
+                    preco_unitario=preco_unitario
                 )
+                valor_total += preco_unitario * quantidade
+
+            # Atualizando o valor total da venda
+            instance.valor_total_venda = valor_total
+            instance.save()
+
         return instance

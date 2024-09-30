@@ -33,6 +33,7 @@ class Venda(models.Model):
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     vendedor = models.ForeignKey(Vendedor, on_delete=models.CASCADE)
     data_venda = models.DateTimeField(default=timezone.now)  # Data atual no momento do cadastro
+    valor_total_venda = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
 
     def __str__(self):
         return f"Venda {self.id} - {self.vendedor.nome} para {self.cliente.nome} em {self.data_venda}"
