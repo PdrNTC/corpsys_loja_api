@@ -1,9 +1,0 @@
-﻿asgiref==3.8.1
-Django==5.1.1
-djangorestframework==3.15.2
-mysqlclient==2.2.4
-sqlparse==0.5.1
-tzdata==2024.2
-pandas==2.0.3
-reportlab==4.2.2
-gunicorn==23.0.0
