@@ -1,5 +1,6 @@
 from django.db import models
-from django.utils import timezone  # Para obter a data e hora atuais
+from django.utils import timezone # Para obter a data e hora atuais
+from decimal import Decimal 
 class Cliente(models.Model):
     nome = models.CharField(max_length=255)
     email = models.EmailField(unique=True) # Permitindo somente emails unicos
