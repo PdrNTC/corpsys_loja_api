@@ -1,9 +1,18 @@
+## Dependencias ##
 asgiref==3.8.1
+chardet==5.2.0
 Django==5.1.1
+django-cors-headers==4.4.0
 djangorestframework==3.15.2
+gunicorn==23.0.0
 mysqlclient==2.2.4
+numpy==1.25.2
+packaging==24.1
+pandas==2.0.3
+pillow==10.4.0
+python-dateutil==2.9.0.post0
+pytz==2024.2
+reportlab==4.2.2
+six==1.16.0
 sqlparse==0.5.1
 tzdata==2024.2
-pandas==2.0.3
-reportlab==4.2.2
-gunicorn==23.0.0
